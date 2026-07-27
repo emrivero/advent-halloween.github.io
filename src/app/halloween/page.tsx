@@ -4,6 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 
 type Movie = { title: string; img: string };
 type MoviesFile = { date: string; movies: Movie[] };
+const fallbackMovies: Movie[] = [
+  "Psicosis", "Alien", "La cosa", "El resplandor", "Scream", "Halloween",
+  "Déjame salir", "Hereditary", "The Witch", "It", "REC", "El exorcista",
+  "Nosferatu", "Carrie", "Poltergeist", "Candyman", "The Ring", "Saw",
+  "El proyecto de la bruja de Blair", "La noche de los muertos vivientes",
+  "Suspiria", "The Babadook", "Un lugar tranquilo", "Midsommar",
+  "La semilla del diablo", "Pesadilla en Elm Street", "Viernes 13",
+  "La matanza de Texas", "Tiburón", "Coraline", "Truco o trato",
+].map((title) => ({ title, img: "/img/pumpkin.png" }));
 
 // util simple de shuffle in-place
 function shuffle<T>(arr: T[]) {
@@ -15,11 +24,7 @@ function shuffle<T>(arr: T[]) {
 }
 
 function isUnlocked(day: number, monthIndex: number, now: Date) {
-  // Mes de octubre = 9 (0-based). Mantengo tu regla:
-  // "si hoy >= día y el mes es octubre, desbloquea"
-  const today = now.getDate();
-  const month = now.getMonth(); // 0-based
-  return month === monthIndex && day <= today;
+  return now >= new Date(now.getFullYear(), monthIndex, day);
 }
 
 export default function HalloweenCalendarPage() {
@@ -34,16 +39,30 @@ export default function HalloweenCalendarPage() {
   // Carga movies.json desde /public (en Next se sirve estático)
   useEffect(() => {
     (async () => {
-      const res = await fetch("/movies.json", { cache: "no-store" });
-      const json: MoviesFile = await res.json();
+      let json: MoviesFile;
+      try {
+        const res = await fetch("/movies.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Catálogo no disponible");
+        json = await res.json();
+        if (!Array.isArray(json.movies) || json.movies.length < 31)
+          throw new Error("Catálogo incompleto");
+      } catch {
+        json = { date: "fallback-1", movies: fallbackMovies };
+      }
       setDataDate(json.date);
 
       const ls = localStorage.getItem("data");
       let selected: Movie[] = [];
 
       if (ls) {
-        const prev = JSON.parse(ls) as MoviesFile;
-        if (prev.date !== json.date) {
+        let prev: MoviesFile | null = null;
+        try {
+          prev = JSON.parse(ls) as MoviesFile;
+        } catch {
+          localStorage.removeItem("data");
+          localStorage.removeItem("movies");
+        }
+        if (!prev || prev.date !== json.date) {
           // Nueva versión -> reshuffle
           selected = shuffle([...json.movies]);
           localStorage.setItem("movies", JSON.stringify(selected));
@@ -51,8 +70,12 @@ export default function HalloweenCalendarPage() {
         } else {
           // Misma versión -> reusar orden
           const cached = localStorage.getItem("movies");
-          if (cached) selected = JSON.parse(cached);
-          else {
+          try {
+            selected = cached ? JSON.parse(cached) : [];
+          } catch {
+            selected = [];
+          }
+          if (!Array.isArray(selected) || selected.length < 31) {
             selected = shuffle([...json.movies]);
             localStorage.setItem("movies", JSON.stringify(selected));
           }
@@ -69,10 +92,9 @@ export default function HalloweenCalendarPage() {
   }, []);
 
   const now = useMemo(() => new Date(), []);
-  const OCTOBER_INDEX = 9; // 0-based: 9 = Octubre. Tu UI muestra 30 días (1..30)
+  const OCTOBER_INDEX = 9;
 
-  // Render de 30 días (1..30) como en tu HTML
-  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
   return (
     <div className="min-h-screen font-werebeast">
@@ -149,7 +171,6 @@ export default function HalloweenCalendarPage() {
               </button>
             </div>
             <div className="mt-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={modal.movie.img}
                 alt={modal.movie.title}

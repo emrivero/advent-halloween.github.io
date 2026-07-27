@@ -1,10 +1,10 @@
 "use client";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function AuthCallbackPage() {
-  const supabase = createSupabaseBrowserClient();
+  const [supabase] = useState(createSupabaseBrowserClient);
   const router = useRouter();
 
   useEffect(() => {

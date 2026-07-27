@@ -6,23 +6,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setDayStatusAction } from "./actions";
 
-function todayYMD(tz = "Europe/Madrid") {
-  const p = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const y = p.find((x) => x.type === "year")!.value;
-  const m = p.find((x) => x.type === "month")!.value;
-  const d = p.find((x) => x.type === "day")!.value;
-  return `${y}-${m}-${d}`;
-}
-
-function isUnlocked(dayDate: string, status: Day["status"]) {
+function isUnlocked(dayDate: string, status: Day["status"], today: string) {
   if (status !== "locked") return true;
-  const todayStr = todayYMD("Europe/Madrid"); // <- local, no ISO UTC
-  return dayDate <= todayStr;
+  return dayDate <= today;
 }
 
 type Movie = {
@@ -114,7 +100,7 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
         "
       >
         {list.map((d) => {
-          const unlockedNow = isUnlocked(d.day_date, d.status);
+          const unlockedNow = isUnlocked(d.day_date, d.status, today);
           const { ring, badgeBg, Icon, label } = statusStyles(d.status);
           const clickable = unlockedNow && !!d.movie;
 
@@ -211,7 +197,6 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
             </div>
 
             <div className="mt-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={modal.movie.poster_url ?? ""}
                 alt={modal.movie.title}
@@ -229,8 +214,13 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
                       setStatusLocal(id, "watched");
                       setModal({ open: false });
                       startTransition(async () => {
-                        await setDayStatusAction(id, "watched");
-                        router.refresh();
+                        try {
+                          await setDayStatusAction(id, "watched", planId);
+                          router.refresh();
+                        } catch {
+                          setStatusLocal(id, modal.day!.status);
+                          alert("No se pudo actualizar el día.");
+                        }
                       });
                     }}
                     disabled={isPending}
@@ -246,8 +236,13 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
                       setStatusLocal(id, "skipped");
                       setModal({ open: false });
                       startTransition(async () => {
-                        await setDayStatusAction(id, "skipped");
-                        router.refresh();
+                        try {
+                          await setDayStatusAction(id, "skipped", planId);
+                          router.refresh();
+                        } catch {
+                          setStatusLocal(id, modal.day!.status);
+                          alert("No se pudo actualizar el día.");
+                        }
                       });
                     }}
                     disabled={isPending}

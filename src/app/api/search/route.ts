@@ -1,14 +1,19 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildPosterUrl, normalizeQuery, SEARCH_TTL_MS } from "@/lib/tmdb";
 import { NextResponse } from "next/server";
+import { allowRequest } from "@/lib/rate-limit";
 
 const TMDB_URL = "https://api.themoviedb.org/3";
 
 export async function GET(req: Request) {
   try {
+    if (!allowRequest(req, "search"))
+      return NextResponse.json({ error: "Demasiadas solicitudes" }, { status: 429 });
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") ?? "").trim();
     if (!q) return NextResponse.json({ results: [] });
+    if (q.length > 120)
+      return NextResponse.json({ error: "Búsqueda demasiado larga" }, { status: 400 });
 
     const nq = normalizeQuery(q);
 
@@ -41,9 +46,11 @@ export async function GET(req: Request) {
     const url = `${TMDB_URL}/search/movie?query=${encodeURIComponent(
       q
     )}&language=es-ES&include_adult=false&page=1`;
-    const r = await fetch(url, {
+    const isV4 = key.startsWith("ey");
+    const requestUrl = isV4 ? url : `${url}&api_key=${encodeURIComponent(key)}`;
+    const r = await fetch(requestUrl, {
       headers: {
-        Authorization: `Bearer ${key.startsWith("ey") ? key : ""}`,
+        ...(isV4 ? { Authorization: `Bearer ${key}` } : {}),
         accept: "application/json",
       },
     });
@@ -52,24 +59,6 @@ export async function GET(req: Request) {
     const ok = r.ok;
     const data = ok ? await r.json() : null;
     if (!ok || !data) {
-      // fallback: intentar con api_key (v3) si la env var no es token v4
-      if (!key.startsWith("ey")) {
-        const r2 = await fetch(`${url}&api_key=${key}`, {
-          headers: { accept: "application/json" },
-        });
-        if (!r2.ok) {
-          const t = await r2.text();
-          return NextResponse.json(
-            { error: `TMDB search error: ${t}` },
-            { status: r2.status }
-          );
-        }
-        const data2 = await r2.json();
-        const results2 = mapSearchResults(data2);
-        // guarda en cache
-        await upsertSearchCache(nq, results2);
-        return NextResponse.json({ results: results2 });
-      }
       const t = await r.text();
       return NextResponse.json(
         { error: `TMDB search error: ${t}` },

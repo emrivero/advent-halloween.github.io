@@ -1,10 +1,8 @@
 // src/lib/time.ts
-import { toZonedTime } from "date-fns-tz";
+import { formatInTimeZone } from "date-fns-tz";
 
 const APP_TZ = "Europe/Madrid"; // o "Europe/Lisbon" si prefieres
 
 export async function getEffectiveToday() {
-  const now = new Date();
-  const zoned = toZonedTime(now, APP_TZ);
-  return zoned.toISOString().slice(0, 10); // YYYY-MM-DD
+  return formatInTimeZone(new Date(), APP_TZ, "yyyy-MM-dd");
 }

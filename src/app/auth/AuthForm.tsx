@@ -4,7 +4,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
 export default function AuthForm() {
-  const supabase = createSupabaseBrowserClient();
+  const [supabase] = useState(createSupabaseBrowserClient);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);

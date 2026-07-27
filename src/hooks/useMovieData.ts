@@ -11,6 +11,8 @@ export type MovieTMDB = Database["public"]["Tables"]["movies_cache"]["Row"];
 
 export type Movie = {
   id?: string;
+  imdb_id?: string | null;
+  tmdb_id?: number | null;
   title: string;
   poster_url?: string | null;
   tags?: string[];
@@ -46,11 +48,13 @@ export function useMovieData(table: string): {
         setMovies(
           data.map((m) => ({
             id: m.imdb_id,
+            imdb_id: m.imdb_id,
+            tmdb_id: m.tmdb_id,
             title: m.title_es,
             poster_url: buildPosterUrl(m.poster_path),
             tags: m.genres_es,
             isCustom: false,
-            year: m.release_date.split("-")[0],
+            year: m.release_date?.split("-")[0] ?? "",
           }))
         );
       }

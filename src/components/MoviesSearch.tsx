@@ -76,7 +76,6 @@ export default function MovieSearch({
               title={it.title}
             >
               <div className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={it.poster_url ?? "/img/pumpkin.png"}
                   alt={it.title}
@@ -100,13 +99,6 @@ export default function MovieSearch({
           className="modal-backdrop overflow-y-auto overscroll-contain"
           onClick={closeDetail}
         >
-          {/* Lock scroll del body mientras el modal está abierto */}
-          {(() => {
-            // inline effect sin hooks extra: ejecuta una sola vez por render del modal
-            typeof document !== "undefined" &&
-              document.documentElement.classList.add("overflow-hidden");
-            return null;
-          })()}
           <div
             className="
         modal-panel
@@ -141,7 +133,6 @@ export default function MovieSearch({
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-[200px_1fr]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={detail.poster_url ?? "/img/pumpkin.png"}
                 alt={detail.title}

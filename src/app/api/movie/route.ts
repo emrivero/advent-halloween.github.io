@@ -1,16 +1,25 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildPosterUrl, MOVIE_TTL_MS } from "@/lib/tmdb";
 import { NextResponse } from "next/server";
+import { allowRequest } from "@/lib/rate-limit";
 
 const TMDB_URL = "https://api.themoviedb.org/3";
 
 export async function GET(req: Request) {
   try {
+    if (!allowRequest(req, "movie"))
+      return NextResponse.json({ error: "Demasiadas solicitudes" }, { status: 429 });
     const { searchParams } = new URL(req.url);
     const tmdbRaw = searchParams.get("tmdb");
     const imdbRaw = searchParams.get("imdb");
     const titleRaw = searchParams.get("title");
     const yearRaw = searchParams.get("year");
+    if (
+      (imdbRaw && !/^tt\d{5,12}$/.test(imdbRaw)) ||
+      (titleRaw && (titleRaw.trim().length === 0 || titleRaw.length > 300)) ||
+      (yearRaw && !/^\d{4}$/.test(yearRaw))
+    )
+      return NextResponse.json({ error: "Parámetros no válidos" }, { status: 400 });
 
     const key = process.env.TMDB_API_KEY;
     if (!key) {
@@ -22,6 +31,11 @@ export async function GET(req: Request) {
 
     // 1) Resolver TMDB id
     let tmdb_id: number | null = tmdbRaw ? Number(tmdbRaw) : null;
+    if (
+      tmdbRaw &&
+      (!Number.isSafeInteger(tmdb_id) || (tmdb_id as number) <= 0)
+    )
+      return NextResponse.json({ error: "tmdb_id no válido" }, { status: 400 });
 
     if (!tmdb_id && imdbRaw) {
       // /find/{imdb_id}?external_source=imdb_id

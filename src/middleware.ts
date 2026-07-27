@@ -3,9 +3,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const url = new URL(req.url);
-  const debug = url.searchParams.get("debugDate"); // YYYY-MM-DD
-
   // if (debug) {
   //   const res = NextResponse.next();
   //   // cookie sólo en dev
@@ -41,8 +38,8 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
-// export const config = {
-//   matcher: [
-//     "/((?!auth/callback|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|gif|woff2)$).*)",
-//   ],
-// };
+export const config = {
+  matcher: [
+    "/((?!api|share|auth/callback|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|gif|woff|woff2|otf|ttf)$).*)",
+  ],
+};

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function AuthButtonClient() {
-  const supabase = createSupabaseBrowserClient();
+  const [supabase] = useState(createSupabaseBrowserClient);
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);

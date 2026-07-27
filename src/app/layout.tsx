@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import DecorativeBG from "@/components/DecorativeBG";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 // (Opcional) un botón de auth en el header
 import AuthButtonClient from "@/components/AuthButtonClient";
@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+};
+
+export const viewport: Viewport = {
   themeColor: "#1d1d1d",
 };
 

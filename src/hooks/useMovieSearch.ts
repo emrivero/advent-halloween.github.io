@@ -37,9 +37,11 @@ export function useMovieSearch(debounceMs = 300) {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const detailAbortRef = useRef<AbortController | null>(null);
 
   // Debounced search
   useEffect(() => {
+    const controller = new AbortController();
     if (!q.trim()) {
       setItems([]);
       setOpen(false);
@@ -50,7 +52,9 @@ export function useMovieSearch(debounceMs = 300) {
     setErr(null);
     const t = setTimeout(async () => {
       try {
-        const r = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+        const r = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`, {
+          signal: controller.signal,
+        });
         const j = await r.json();
         if (r.ok) {
           setItems(j.results ?? []);
@@ -61,12 +65,16 @@ export function useMovieSearch(debounceMs = 300) {
           setOpen(false);
         }
       } catch (e: any) {
+        if (e?.name === "AbortError") return;
         setErr(e?.message ?? "Error al buscar");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }, debounceMs);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      controller.abort();
+    };
   }, [q, debounceMs]);
 
   // Close on outside click
@@ -82,23 +90,33 @@ export function useMovieSearch(debounceMs = 300) {
 
   const onPick = useCallback(async (it: SearchItem) => {
     if (!it.tmdb_id) return;
+    detailAbortRef.current?.abort();
+    const controller = new AbortController();
+    detailAbortRef.current = controller;
     setOpen(false);
     setDetailErr(null);
     setDetailLoading(true);
     try {
-      const r = await fetch(`/api/movie?tmdb=${it.tmdb_id}`);
+      const r = await fetch(`/api/movie?tmdb=${it.tmdb_id}`, {
+        signal: controller.signal,
+      });
       const j = await r.json();
       if (!r.ok) throw new Error(j?.error ?? "Error cargando detalle");
       setDetail(j as MovieDetail);
     } catch (e: any) {
+      if (e?.name === "AbortError") return;
       setDetailErr(e?.message ?? "Error cargando detalle");
       setDetail(null);
     } finally {
-      setDetailLoading(false);
+      if (!controller.signal.aborted) setDetailLoading(false);
     }
   }, []);
 
-  const closeDetail = useCallback(() => setDetail(null), []);
+  const closeDetail = useCallback(() => {
+    detailAbortRef.current?.abort();
+    setDetailLoading(false);
+    setDetail(null);
+  }, []);
 
   const bindings = useMemo(
     () => ({

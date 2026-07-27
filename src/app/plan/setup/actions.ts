@@ -1,6 +1,12 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  isDateString,
+  isUuid,
+  normalizePlanDays,
+  pickEvenlySpacedDays,
+} from "@/lib/plan";
 import { addDays, eachDayOfInterval, isWeekend } from "date-fns";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -14,18 +20,6 @@ type CreatePlanInput = {
   allowedMovieIds?: string[];
   customDays?: string[]; // YYYY-MM-DD[]
 };
-
-function pickDays(range: string[], count: number) {
-  if (count >= range.length) return range;
-  const step = Math.floor(range.length / count);
-  const out: string[] = [];
-  let idx = 0;
-  for (let i = 0; i < count; i++) {
-    out.push(range[Math.min(idx, range.length - 1)]);
-    idx += step;
-  }
-  return out;
-}
 
 export async function createPlanAction(input: CreatePlanInput) {
   const supabase = await createSupabaseServerClient();
@@ -44,6 +38,12 @@ export async function createPlanAction(input: CreatePlanInput) {
     allowedMovieIds = [],
     customDays = [],
   } = input;
+  if (!isDateString(startDate) || !isDateString(endDate) || startDate > endDate)
+    throw new Error("Rango de fechas no válido");
+  if (!Number.isInteger(count) || count < 0 || count > 366)
+    throw new Error("Cantidad de días no válida");
+  if (allowedMovieIds.some((id) => !isUuid(id)))
+    throw new Error("El catálogo contiene identificadores no válidos");
 
   // 1) Pool de películas
   let moviePool: { id: string }[] = [];
@@ -80,7 +80,10 @@ export async function createPlanAction(input: CreatePlanInput) {
       days = dates.filter((d) => isWeekend(new Date(d)));
       break;
     case "3_per_week":
-      days = pickDays(dates, Math.min(count, Math.ceil(dates.length / 2)));
+      days = pickEvenlySpacedDays(
+        dates,
+        Math.min(count, Math.ceil(dates.length / 2))
+      );
       break;
     case "custom":
       days = customDays.length ? [...customDays].sort() : [];
@@ -88,9 +91,10 @@ export async function createPlanAction(input: CreatePlanInput) {
     default:
       days = dates;
   }
+  if (days.length) days = normalizePlanDays(days);
 
   if (count > 0) {
-    if (days.length > count) days = pickDays(days, count);
+    if (days.length > count) days = pickEvenlySpacedDays(days, count);
     if (days.length < count) {
       let cursor = new Date(endDate);
       while (days.length < count) {
@@ -106,6 +110,10 @@ export async function createPlanAction(input: CreatePlanInput) {
     [moviePool[i], moviePool[j]] = [moviePool[j], moviePool[i]];
   }
   const chosen = moviePool.slice(0, days.length);
+  if (chosen.length < days.length)
+    throw new Error(
+      `No hay suficientes películas: necesitas ${days.length} y hay ${moviePool.length}`
+    );
 
   // 4) Inserta plan y días
   const { data: plan, error: planErr } = await supabase
@@ -113,8 +121,8 @@ export async function createPlanAction(input: CreatePlanInput) {
     .insert({
       user_id: user.id,
       name: name ?? "Mi plan de Halloween",
-      start_date: startDate,
-      end_date: endDate,
+      start_date: days[0] ?? startDate,
+      end_date: days[days.length - 1] ?? endDate,
       cadence: strategy,
     })
     .select()
@@ -131,7 +139,10 @@ export async function createPlanAction(input: CreatePlanInput) {
 
   if (rows.length > 0) {
     const { error: pdErr } = await supabase.from("plan_days").insert(rows);
-    if (pdErr) throw new Error(pdErr.message);
+    if (pdErr) {
+      await supabase.from("plans").delete().eq("id", plan.id);
+      throw new Error(pdErr.message);
+    }
   }
 
   revalidatePath(`/plan/${plan.id}`);

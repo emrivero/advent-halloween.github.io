@@ -2,6 +2,12 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  interleaveBlocks,
+  isUuid,
+  normalizePlanDays,
+  shuffleInPlace,
+} from "@/lib/plan";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -18,24 +24,6 @@ type SelectedMovie = {
   isSaga?: boolean;
 };
 
-// Fisher–Yates
-function shuffleInPlace<T>(a: T[]) {
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function isUuid(v: string | undefined): v is string {
-  return (
-    !!v &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      v
-    )
-  );
-}
-
 export async function createPlanFromSelectionAction(input: {
   name: string;
   days: string[]; // 'YYYY-MM-DD' ya ordenados
@@ -47,10 +35,22 @@ export async function createPlanFromSelectionAction(input: {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("No autenticado");
 
-  const { name, days, movies } = input;
-  if (!days.length) throw new Error("Sin días");
+  const name = input.name.trim().slice(0, 120) || "Mi plan";
+  const days = normalizePlanDays(input.days);
+  const movies = input.movies;
   if (movies.length !== days.length)
     throw new Error("El nº de películas debe igualar el nº de días");
+  if (
+    movies.some(
+      (movie) =>
+        !movie.title?.trim() ||
+        movie.title.length > 300 ||
+        (movie.tmdb_id != null &&
+          (!Number.isSafeInteger(movie.tmdb_id) || movie.tmdb_id <= 0)) ||
+        (movie.imdb_id != null && !/^tt\d{5,12}$/.test(movie.imdb_id))
+    )
+  )
+    throw new Error("Hay películas con datos no válidos");
 
   // 1) Clasifica indices
   const internalIdx: number[] = [];
@@ -251,28 +251,6 @@ export async function createPlanFromSelectionAction(input: {
    * así se reparten por el calendario manteniendo el orden interno.
    * Para darle un punto de aleatoriedad extra, empieza el ciclo en un offset aleatorio.
    */
-  function interleaveBlocks<T>(blocks: T[][]): T[] {
-    const queues = blocks.map((b) => b.slice()); // copiamos para no mutar
-    const total = queues.reduce((acc, q) => acc + q.length, 0);
-    const out: T[] = [];
-
-    // offset aleatorio de inicio para que el patrón no sea siempre el mismo
-    let start = Math.floor(Math.random() * Math.max(1, queues.length));
-
-    while (out.length < total) {
-      for (let k = 0; k < queues.length; k++) {
-        const i = (start + k) % queues.length;
-        const q = queues[i];
-        if (q.length) {
-          out.push(q.shift()!);
-        }
-      }
-      // cambia el offset en cada vuelta para evitar patrones demasiado regulares
-      start = (start + 1) % Math.max(1, queues.length);
-    }
-    return out;
-  }
-
   const interleaved = interleaveBlocks(blocks);
 
   // 7.6) Mapear al calendario
@@ -284,7 +262,10 @@ export async function createPlanFromSelectionAction(input: {
   }));
 
   const { error: pdErr } = await supabase.from("plan_days").insert(rows);
-  if (pdErr) throw new Error(pdErr.message);
+  if (pdErr) {
+    await supabase.from("plans").delete().eq("id", plan.id);
+    throw new Error(pdErr.message);
+  }
 
   revalidatePath(`/plan/${plan.id}`);
   redirect(`/plan/${plan.id}`);

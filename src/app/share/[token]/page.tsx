@@ -12,16 +12,27 @@ type Row = {
 export default async function SharePage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
+  const { token } = await params;
   const supabase = await createSupabaseServerClient();
+  const { data: share } = await supabase
+    .from("share_links")
+    .select("token, expires_at")
+    .eq("token", token)
+    .maybeSingle();
+  const expired =
+    !!share?.expires_at && new Date(share.expires_at).getTime() <= Date.now();
 
   // Cargamos días proyectados por la vista pública
-  const { data: rows } = await supabase
-    .from("shared_plan_days")
-    .select("id, day_date, title, poster_url")
-    .eq("token", params.token)
-    .order("day_date");
+  const { data: rows } =
+    share && !expired
+      ? await supabase
+          .from("shared_plan_days")
+          .select("id, day_date, title, poster_url")
+          .eq("token", token)
+          .order("day_date")
+      : { data: null };
 
   if (!rows || rows.length === 0) {
     return (

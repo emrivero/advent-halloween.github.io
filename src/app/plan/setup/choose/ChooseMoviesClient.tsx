@@ -228,7 +228,6 @@ export default function ChooseMoviesClient({
                   key={`${m.id ?? "custom"}-${i}`}
                   className="flex items-center gap-2 rounded-md border border-white/10 bg-black/40 p-2"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={m.poster_url ?? "/img/pumpkin.png"}
                     alt={m.title}
@@ -404,7 +403,6 @@ export default function ChooseMoviesClient({
                 ].join(" ")}
                 title={m.title}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={m.poster_url ?? "/img/pumpkin.png"}
                   alt={m.title}
@@ -486,7 +484,6 @@ export default function ChooseMoviesClient({
                     key={`${m.title}-${i}`}
                     className="flex gap-3 rounded-md border border-white/10 bg-black/40 p-2"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={m.poster_url ?? "/img/pumpkin.png"}
                       alt={m.title}

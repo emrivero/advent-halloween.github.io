@@ -23,7 +23,7 @@ export default function PlanSetupClient() {
   const router = useRouter();
   const year = new Date().getFullYear();
   const start = new Date(year, 9, 1);
-  const end = new Date(year, 9, 30);
+  const end = new Date(year, 9, 31);
   const today = new Date();
 
   const [name, setName] = useState(`Halloween ${year}`);
@@ -40,7 +40,8 @@ export default function PlanSetupClient() {
     const key = iso(d);
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };

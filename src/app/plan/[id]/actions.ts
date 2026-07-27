@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { assertDayOwner, assertPlanOwner } from "@/lib/plan-access";
 import { getEffectiveToday } from "@/lib/time";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -11,6 +12,7 @@ export async function unlockTodayAction(planId: string) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
+  await assertPlanOwner(supabase, planId, user.id);
 
   // Hoy como YYYY-MM-DD en Europe/Madrid (tu función ya lo da así)
   const today = await getEffectiveToday();
@@ -32,7 +34,7 @@ export async function unlockTodayAction(planId: string) {
 
 export async function setDayStatusAction(
   dayId: string,
-  status: "watched" | "skipped" | "unlocked" | "locked",
+  status: "watched" | "skipped",
   planId?: string
 ) {
   const supabase = await createSupabaseServerClient();
@@ -40,6 +42,9 @@ export async function setDayStatusAction(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
+  const day = await assertDayOwner(supabase, dayId, user.id);
+  if (day.day_date > (await getEffectiveToday()))
+    throw new Error("No se puede modificar un día todavía bloqueado");
 
   const patch: any = { status };
   if (status === "watched") patch.watched_at = new Date().toISOString();
@@ -52,7 +57,7 @@ export async function setDayStatusAction(
 
   if (error) throw new Error(error.message);
 
-  if (planId) revalidatePath(`/plan/${planId}`, "page");
+  revalidatePath(`/plan/${planId ?? day.plan_id}`, "page");
 }
 
 export async function deletePlanAction(formData: FormData) {
@@ -65,18 +70,14 @@ export async function deletePlanAction(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
 
-  const { data: plan, error: planErr } = await supabase
-    .from("plans")
-    .select("id, user_id")
-    .eq("id", planId)
-    .single();
-
-  if (planErr || !plan || plan.user_id !== user.id) {
-    throw new Error("No tienes permiso para borrar este plan");
-  }
+  await assertPlanOwner(supabase, planId, user.id);
 
   // Si NO tienes ON DELETE CASCADE, borra días primero
-  await supabase.from("plan_days").delete().eq("plan_id", planId);
+  const { error: daysErr } = await supabase
+    .from("plan_days")
+    .delete()
+    .eq("plan_id", planId);
+  if (daysErr) throw new Error(daysErr.message);
 
   const { error: delErr } = await supabase
     .from("plans")

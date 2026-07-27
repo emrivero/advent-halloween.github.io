@@ -1,6 +1,7 @@
 import RehacerPlanButton from "@/components/ResetButton";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEffectiveToday } from "@/lib/time";
+import { assertPlanOwner } from "@/lib/plan-access";
 import { redirect } from "next/navigation";
 import SharePanel from "./share-panel";
 import Calendar from "./ui-calendar";
@@ -17,6 +18,7 @@ export default async function PlanDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth");
+  await assertPlanOwner(supabase, id, user.id);
 
   // Hoy como 'YYYY-MM-DD' (Europe/Madrid)
   const today = await getEffectiveToday();
@@ -34,6 +36,7 @@ export default async function PlanDetailPage({
     .from("plans")
     .select("*")
     .eq("id", id)
+    .eq("user_id", user.id)
     .single();
   if (!plan) redirect("/");
 

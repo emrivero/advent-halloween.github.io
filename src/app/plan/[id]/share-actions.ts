@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { assertPlanOwner } from "@/lib/plan-access";
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 
@@ -15,11 +16,19 @@ export async function createShareLinkAction(planId: string) {
     error,
   } = await supabase.auth.getUser();
   if (error || !user) throw new Error("No autenticado");
+  await assertPlanOwner(supabase, planId, user.id);
 
   const t = token();
   const { data, error: upErr } = await supabase
     .from("share_links")
-    .insert({ plan_id: planId, token: t })
+    .upsert(
+      {
+        plan_id: planId,
+        token: t,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      { onConflict: "plan_id" }
+    )
     .select("token")
     .single();
 
@@ -36,6 +45,7 @@ export async function revokeShareLinkAction(planId: string) {
     error,
   } = await supabase.auth.getUser();
   if (error || !user) throw new Error("No autenticado");
+  await assertPlanOwner(supabase, planId, user.id);
 
   const { error: delErr } = await supabase
     .from("share_links")

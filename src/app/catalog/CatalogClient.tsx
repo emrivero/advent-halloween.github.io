@@ -109,7 +109,6 @@ export default function CatalogClient({
             ].join(" ")}
           >
             <div className="aspect-[2/3] overflow-hidden rounded-lg bg-black/30 flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               {m.poster_url ? (
                 <img
                   src={m.poster_url}
