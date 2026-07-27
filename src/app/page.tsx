@@ -1,6 +1,7 @@
 import PlanButtonClient from "@/components/PlanButtonClient";
 import Link from "next/link";
 import { getI18n } from "@/i18n/server";
+import { BookOpen, Sparkles } from "lucide-react";
 
 export default async function HomePage() {
   const { t } = await getI18n();
@@ -18,6 +19,31 @@ export default async function HomePage() {
           {t("homeIntro")}
         </p>
       </section>
+
+      <Link
+        href="/reading/setup"
+        className="group mt-10 block overflow-hidden rounded-2xl border border-violet-400/30 bg-gradient-to-r from-violet-950/90 via-gray-950 to-amber-950/70 p-6 shadow-[0_0_40px_rgba(139,92,246,0.12)] transition hover:border-violet-300/60 md:p-8"
+      >
+        <div className="flex flex-col gap-5 md:flex-row md:items-center">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-violet-400/15 text-violet-200">
+            <BookOpen size={30} />
+          </div>
+          <div className="flex-1">
+            <span className="inline-flex items-center gap-1 rounded-full bg-violet-300/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-violet-200">
+              <Sparkles size={13} /> {t("readingBannerBadge")}
+            </span>
+            <h2 className="mt-3 text-2xl font-bold md:text-3xl">
+              {t("readingBannerTitle")}
+            </h2>
+            <p className="mt-2 max-w-3xl text-white/70">
+              {t("readingBannerText")}
+            </p>
+          </div>
+          <span className="rounded-full bg-violet-200 px-5 py-3 text-center font-semibold text-violet-950 transition group-hover:scale-105">
+            {t("readingBannerCta")} →
+          </span>
+        </div>
+      </Link>
 
       {/* Cards */}
       <section className="mt-10 grid gap-6 md:grid-cols-2">
