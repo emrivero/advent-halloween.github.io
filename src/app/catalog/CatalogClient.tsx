@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { setAllowedAction } from "./actions";
+import { useI18n } from "@/i18n/provider";
 
 type MovieCard = {
   id: string;
@@ -18,6 +19,7 @@ export default function CatalogClient({
 }: {
   initialMovies: MovieCard[];
 }) {
+  const { t } = useI18n();
   const [movies, setMovies] = useState<MovieCard[]>(initialMovies);
   const [q, setQ] = useState("");
   const [tag, setTag] = useState<string>("__any");
@@ -54,7 +56,7 @@ export default function CatalogClient({
         setMovies((prev) =>
           prev.map((m) => (m.id === id ? { ...m, allowed: !next } : m))
         );
-        alert("No se pudo guardar la preferencia. Reintenta.");
+        alert(t("preferenceError"));
       }
     });
   };
@@ -66,7 +68,7 @@ export default function CatalogClient({
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="Buscar título o año…"
+            placeholder={t("searchTitleYear")}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="rounded-md border border-white/10 bg-black/40 px-3 py-2 text-white placeholder-white/50 min-w-[260px]"
@@ -76,15 +78,15 @@ export default function CatalogClient({
             onChange={(e) => setTag(e.target.value)}
             className="rounded-md border border-white/10 bg-black/40 px-3 py-2 text-white"
           >
-            {tags.map((t) => (
-              <option key={t} value={t}>
-                {t === "__any" ? "Cualquier tag" : t}
+            {tags.map((tagName) => (
+              <option key={tagName} value={tagName}>
+                {tagName === "__any" ? t("anyTag") : tagName}
               </option>
             ))}
           </select>
         </div>
         <div className="text-white/70 text-sm">
-          {pending ? "Guardando cambios…" : null} Total: {filtered.length}
+          {pending ? `${t("saving")} ` : null}{t("total", { count: filtered.length })}
         </div>
       </div>
 
@@ -116,7 +118,7 @@ export default function CatalogClient({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="text-white/40 text-sm px-2">Sin poster</span>
+                <span className="text-white/40 text-sm px-2">{t("noPoster")}</span>
               )}
             </div>
 
@@ -148,9 +150,9 @@ export default function CatalogClient({
                     ? "bg-white text-gray-900"
                     : "border border-white/15 hover:bg-white/5",
                 ].join(" ")}
-                title={m.allowed ? "Excluir del plan" : "Incluir en el plan"}
+                title={m.allowed ? t("excludePlan") : t("includePlan")}
               >
-                {m.allowed ? "Incluida ✓" : "Excluida"}
+                {m.allowed ? t("included") : t("excluded")}
               </button>
               {/* sitio para ⭐ weight, futuro */}
             </div>

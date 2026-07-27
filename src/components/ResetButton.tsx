@@ -3,8 +3,10 @@
 
 import { deletePlanAction } from "@/app/plan/[id]/actions";
 import { useState, useTransition } from "react";
+import { useI18n } from "@/i18n/provider";
 
 export default function RehacerPlanButton({ planId }: { planId: string }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -17,17 +19,17 @@ export default function RehacerPlanButton({ planId }: { planId: string }) {
                    bg-halloweenAccent text-black 
                    hover:scale-105 transition-transform shadow-lg"
       >
-        🔄 Rehacer plan
+        🔄 {t("redoPlan")}
       </button>
 
       {open && (
         <div className="modal-backdrop">
           <div className="modal-panel rounded-2xl shadow-xl">
             <h2 className="font-werebeast text-xl mb-2 text-halloweenAccent">
-              ¿Rehacer el plan?
+              {t("redoQuestion")}
             </h2>
             <p className="text-sm text-gray-200 mb-6">
-              Se eliminará el plan actual y volverás al asistente de creación.
+              {t("redoWarning")}
             </p>
 
             <form
@@ -44,7 +46,7 @@ export default function RehacerPlanButton({ planId }: { planId: string }) {
                            text-gray-200 hover:bg-gray-700 transition"
                 disabled={pending}
               >
-                Cancelar
+                {t("cancel")}
               </button>
               <button
                 type="submit"
@@ -53,7 +55,7 @@ export default function RehacerPlanButton({ planId }: { planId: string }) {
                            hover:scale-105 transition-transform disabled:opacity-60"
                 disabled={pending}
               >
-                {pending ? "Rehaciendo…" : "Sí, rehacer"}
+                {pending ? t("redoing") : t("redoYes")}
               </button>
             </form>
           </div>

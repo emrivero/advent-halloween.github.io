@@ -5,6 +5,7 @@ import { assertPlanOwner } from "@/lib/plan-access";
 import { redirect } from "next/navigation";
 import SharePanel from "./share-panel";
 import Calendar from "./ui-calendar";
+import { getI18n } from "@/i18n/server";
 
 export default async function PlanDetailPage({
   params,
@@ -12,6 +13,7 @@ export default async function PlanDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const { t } = await getI18n();
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -59,10 +61,10 @@ export default async function PlanDetailPage({
       <header className="flex flex-col sm:flex-row items-center justify-center">
         <div className="flex-1 sm:flex-2 mb-2 sm:mb-0">
           <h1 className="text-2xl font-semibold text-halloweenAccent ">
-            {plan.name ?? "Mi plan"}
+            {plan.name ?? t("planName")}
           </h1>
           <p className="text-white/70 text-sm">
-            {plan.start_date} → {plan.end_date} · {rows?.length ?? 0} días
+            {plan.start_date} → {plan.end_date} · {t("days", { count: rows?.length ?? 0 })}
           </p>
         </div>
 

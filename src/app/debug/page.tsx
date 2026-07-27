@@ -1,6 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getI18n } from "@/i18n/server";
 
 export default async function DebugPage() {
+  const { t } = await getI18n();
   const supabase = await createSupabaseServerClient();
 
   // 1) Tailwind test: si ves caja verde, tailwind está ok
@@ -25,11 +27,11 @@ export default async function DebugPage() {
       <section className="rounded-lg border border-white/10 p-4">
         <h2 className="font-semibold mb-2">Tailwind</h2>
         <div className="text-white/80 text-sm mb-2">
-          Deberías ver una caja verde abajo.
+          {t("debugTailwindHelp")}
         </div>
         <div className="h-8 w-full rounded bg-[#22c55e]" />
         <p className="mt-2 text-sm text-white/60">
-          {twOk ? "Tailwind OK" : "Tailwind no cargó"}
+          {twOk ? "Tailwind OK" : t("tailwindMissing")}
         </p>
       </section>
 
@@ -39,9 +41,9 @@ export default async function DebugPage() {
           <pre className="text-red-400 text-xs">{userErr.message}</pre>
         )}
         {user ? (
-          <p className="text-white/80 text-sm">Usuario: {user.email}</p>
+          <p className="text-white/80 text-sm">{t("user", { email: user.email ?? "" })}</p>
         ) : (
-          <p className="text-white/60 text-sm">No logado</p>
+          <p className="text-white/60 text-sm">{t("signedOut")}</p>
         )}
       </section>
 
@@ -58,9 +60,9 @@ export default async function DebugPage() {
       </section>
 
       <section className="rounded-lg border border-white/10 p-4">
-        <h2 className="font-semibold mb-2">ENV check (client hidden)</h2>
+        <h2 className="font-semibold mb-2">{t("envCheck")}</h2>
         <p className="text-white/60 text-sm">
-          Asegúrate de tener <code className="text-white">.env.local</code> con:
+          {t("envHelp")}
         </p>
         <pre className="text-xs text-white/70 bg-black/40 p-2 rounded">
           {`NEXT_PUBLIC_SUPABASE_URL=...

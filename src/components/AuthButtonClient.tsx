@@ -4,9 +4,11 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/i18n/provider";
 
 export default function AuthButtonClient() {
   const [supabase] = useState(createSupabaseBrowserClient);
+  const { t } = useI18n();
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export default function AuthButtonClient() {
     return (
       <div className="flex items-center gap-3">
         <span className="text-white/80 text-sm">
-          Bienvenid@, <strong>{email}</strong>
+          {t("welcome", { email })}
         </span>
         <button
           onClick={async () => {
@@ -55,7 +57,7 @@ export default function AuthButtonClient() {
           }}
           className="rounded-md border border-white/15 px-3 py-1 text-sm hover:bg-white/5"
         >
-          Cerrar sesión
+          {t("signOut")}
         </button>
       </div>
     );
@@ -63,7 +65,7 @@ export default function AuthButtonClient() {
 
   return (
     <Link href="/auth" className="rounded-md bg-white px-4 py-2 text-gray-900">
-      Entrar
+      {t("signIn")}
     </Link>
   );
 }

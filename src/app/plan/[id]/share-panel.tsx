@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { createShareLinkAction, revokeShareLinkAction } from "./share-actions";
+import { useI18n } from "@/i18n/provider";
 
 export default function SharePanel({
   planId,
@@ -10,6 +11,7 @@ export default function SharePanel({
   planId: string;
   existingToken: string | null;
 }) {
+  const { t } = useI18n();
   const [token, setToken] = useState(existingToken);
   const [origin, setOrigin] = useState("");
   const [pending, startTransition] = useTransition();
@@ -24,9 +26,9 @@ export default function SharePanel({
         await navigator.clipboard.writeText(
           `${window.location.origin}/share/${res.token}`
         );
-        alert("Enlace copiado al portapapeles");
+        alert(t("linkCopied"));
       } catch {
-        alert("No se pudo crear el enlace.");
+        alert(t("shareCreateError"));
       }
     });
   };
@@ -37,7 +39,7 @@ export default function SharePanel({
         await revokeShareLinkAction(planId);
         setToken(null);
       } catch {
-        alert("No se pudo revocar el enlace.");
+        alert(t("shareRevokeError"));
       }
     });
   };
@@ -46,9 +48,9 @@ export default function SharePanel({
     <div className="mt-4 rounded-xl border border-white/10 bg-black/30 p-3">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-left">
-          <div className="font-medium">Compartir plan</div>
+          <div className="font-medium">{t("sharePlan")}</div>
           <div className="text-white/70 text-sm">
-            Genera un enlace de solo lectura para compartir tu calendario.
+            {t("shareIntro")}
           </div>
         </div>
         <div className="flex gap-2">
@@ -58,7 +60,7 @@ export default function SharePanel({
               disabled={pending}
               className="rounded-md bg-white px-3 py-2 text-gray-900"
             >
-              Crear enlace
+              {t("createLink")}
             </button>
           ) : (
             <>
@@ -68,25 +70,25 @@ export default function SharePanel({
                 rel="noopener noreferrer"
                 className="rounded-md border border-white/15 px-3 py-2 hover:bg-white/5"
               >
-                Abrir enlace
+                {t("openLink")}
               </a>
               <button
                 onClick={async () => {
                   if (url) {
                     await navigator.clipboard.writeText(url);
-                    alert("Copiado");
+                    alert(t("copied"));
                   }
                 }}
                 className="rounded-md border border-white/15 px-3 py-2 hover:bg-white/5"
               >
-                Copiar
+                {t("copy")}
               </button>
               <button
                 onClick={revoke}
                 disabled={pending}
                 className="rounded-md border border-white/15 px-3 py-2 hover:bg-white/5"
               >
-                Revocar
+                {t("revoke")}
               </button>
             </>
           )}

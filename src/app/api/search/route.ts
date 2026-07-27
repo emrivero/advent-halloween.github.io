@@ -2,18 +2,20 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildPosterUrl, normalizeQuery, SEARCH_TTL_MS } from "@/lib/tmdb";
 import { NextResponse } from "next/server";
 import { allowRequest } from "@/lib/rate-limit";
+import { localeFromRequest, translate } from "@/i18n/config";
 
 const TMDB_URL = "https://api.themoviedb.org/3";
 
 export async function GET(req: Request) {
   try {
+    const locale = localeFromRequest(req);
     if (!allowRequest(req, "search"))
-      return NextResponse.json({ error: "Demasiadas solicitudes" }, { status: 429 });
+      return NextResponse.json({ error: translate(locale, "tooManyRequests") }, { status: 429 });
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") ?? "").trim();
     if (!q) return NextResponse.json({ results: [] });
     if (q.length > 120)
-      return NextResponse.json({ error: "Búsqueda demasiado larga" }, { status: 400 });
+      return NextResponse.json({ error: translate(locale, "searchTooLong") }, { status: 400 });
 
     const nq = normalizeQuery(q);
 
@@ -38,7 +40,7 @@ export async function GET(req: Request) {
     const key = process.env.TMDB_API_KEY;
     if (!key) {
       return NextResponse.json(
-        { error: "TMDB_API_KEY missing" },
+        { error: translate(locale, "tmdbMissing") },
         { status: 500 }
       );
     }

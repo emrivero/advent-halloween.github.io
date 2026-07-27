@@ -10,6 +10,7 @@ import {
 import { es } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useI18n } from "@/i18n/provider";
 
 const iso = (d: Date) => {
   const y = d.getFullYear();
@@ -20,6 +21,7 @@ const iso = (d: Date) => {
 const mondayIndex = (d: Date) => (getDay(d) + 6) % 7;
 
 export default function PlanSetupClient() {
+  const { t } = useI18n();
   const router = useRouter();
   const year = new Date().getFullYear();
   const start = new Date(year, 9, 1);
@@ -59,7 +61,7 @@ export default function PlanSetupClient() {
   const endDate = count ? selectedSorted[count - 1] : null;
 
   const goChoose = () => {
-    if (!count) return alert("Selecciona al menos un día.");
+    if (!count) return alert(t("selectOneDay"));
     const params = new URLSearchParams({
       name,
       days: selectedSorted.join(","),
@@ -69,7 +71,7 @@ export default function PlanSetupClient() {
 
   return (
     <div className="mt-6 space-y-5">
-      <p className="text-xl font-semibold">Elige tus días de octubre</p>
+      <p className="text-xl font-semibold">{t("chooseOctoberDays")}</p>
 
       {/* <label className="block text-left">
         <span className="text-sm text-white/80">Nombre del plan</span>
@@ -85,25 +87,25 @@ export default function PlanSetupClient() {
           onClick={selectWeekends}
           className="rounded-md border border-white/15 px-2 py-1.5 text-sm hover:bg-white/5"
         >
-          Fines de semana
+          {t("weekends")}
         </button>
         <button
           onClick={selectWeekdays}
           className="rounded-md border border-white/15 px-2 py-1.5 text-sm hover:bg-white/5"
         >
-          Laborables
+          {t("weekdays")}
         </button>
         <button
           onClick={allDays}
           className="rounded-md border border-white/15 px-2 py-1.5 text-sm hover:bg-white/5"
         >
-          Monster Mode
+          {t("monsterMode")}
         </button>
         <button
           onClick={clearAll}
           className="rounded-md border border-white/15 px-2 py-1.5 text-sm hover:bg-white/5"
         >
-          Limpiar
+          {t("clear")}
         </button>
       </div>
 
@@ -153,11 +155,11 @@ export default function PlanSetupClient() {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/30 p-3">
         <div className="text-sm text-white/80">
-          Seleccionados: <strong>{count}</strong>
+          {t("selected", { count })}
           {startDate && endDate && (
             <>
               {" "}
-              · Rango: <span className="opacity-90">{startDate}</span> →{" "}
+              · {t("range")}: <span className="opacity-90">{startDate}</span> →{" "}
               <span className="opacity-90">{endDate}</span>
             </>
           )}
@@ -171,7 +173,7 @@ export default function PlanSetupClient() {
               : "rounded-md border border-white/15 px-4 py-2 text-white/60 cursor-not-allowed"
           }
         >
-          Continuar
+          {t("continue")}
         </button>
       </div>
     </div>

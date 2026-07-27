@@ -2,6 +2,7 @@
 
 import { MovieDetail, useMovieSearch } from "@/hooks/useMovieSearch";
 import { useEffect } from "react";
+import { useI18n } from "@/i18n/provider";
 
 export default function MovieSearch({
   onAdd,
@@ -10,6 +11,7 @@ export default function MovieSearch({
   onAdd: (movie: MovieDetail) => void;
   maxRemaining: number;
 }) {
+  const { t } = useI18n();
   const {
     containerRef,
     inputRef,
@@ -41,7 +43,7 @@ export default function MovieSearch({
       {loading && q && (
         <div
           className="pointer-events-none absolute right-[90px] top-1/2 -translate-y-[12px] flex items-center"
-          aria-label="Cargando"
+          aria-label={t("loading")}
           role="status"
         >
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
@@ -52,7 +54,7 @@ export default function MovieSearch({
           ref={inputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Busca una película…"
+          placeholder={t("movieSearch")}
           className="w-full rounded-md border border-white/10 bg-black/40 px-3 py-2 text-white"
           onFocus={() => q.trim() && setOpen(true)}
         />
@@ -61,7 +63,7 @@ export default function MovieSearch({
           disabled={loading}
           className="rounded-md border border-white/15 px-3 py-2 hover:bg-white/5"
         >
-          {loading ? "…" : "Buscar"}
+          {loading ? "…" : t("search")}
         </button>
       </div>
 
@@ -126,7 +128,7 @@ export default function MovieSearch({
                   closeDetail();
                 }}
                 className="text-[#f0a500] text-2xl leading-none"
-                aria-label="Cerrar"
+                aria-label={t("close")}
               >
                 &times;
               </button>
@@ -140,25 +142,25 @@ export default function MovieSearch({
               />
               <div>
                 {detailLoading ? (
-                  <p className="text-white/70">Cargando…</p>
+                  <p className="text-white/70">{t("loading")}</p>
                 ) : detailErr ? (
                   <p className="text-red-400">{detailErr}</p>
                 ) : (
                   <>
                     <p className="text-white/80 text-sm whitespace-pre-wrap">
-                      {detail.overview || "Sinopsis no disponible."}
+                      {detail.overview || t("noSynopsis")}
                     </p>
                     <div className="mt-3 text-sm text-white/70">
                       {detail.runtime_min ? (
-                        <span>Duración: {detail.runtime_min} min</span>
+                        <span>{t("duration", { minutes: detail.runtime_min })}</span>
                       ) : null}
                       {!!detail.genres?.length && (
                         <span className="ml-4">
-                          Géneros: {detail.genres.join(", ")}
+                          {t("genres", { genres: detail.genres.join(", ") })}
                         </span>
                       )}
                       {detail.released ? (
-                        <span className="ml-4">Estreno: {detail.released}</span>
+                        <span className="ml-4">{t("release", { date: detail.released })}</span>
                       ) : null}
                     </div>
                   </>
@@ -178,7 +180,7 @@ export default function MovieSearch({
                 }}
                 className="rounded-md border border-white/15 px-4 py-2 hover:bg-white/5"
               >
-                Cancelar
+                {t("cancel")}
               </button>
               <button
                 disabled={!canAdd}
@@ -198,7 +200,7 @@ export default function MovieSearch({
                     : "rounded-md border border-white/15 px-4 py-2 text-white/60 cursor-not-allowed"
                 }
               >
-                Añadir
+                {t("add")}
               </button>
             </div>
           </div>

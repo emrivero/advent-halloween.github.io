@@ -1,8 +1,10 @@
 // src/components/TimeDebugBar.tsx
 "use client";
 import { addDays, formatISO, parseISO } from "date-fns";
+import { useI18n } from "@/i18n/provider";
 
 export default function TimeDebugBar({ initial }: { initial: string }) {
+  const { t } = useI18n();
   if (process.env.NODE_ENV === "production") return null;
 
   const setCookie = (value: string | null) => {
@@ -26,13 +28,13 @@ export default function TimeDebugBar({ initial }: { initial: string }) {
         onClick={() => shift(-1)}
         className="mr-2 rounded border border-white/15 px-2 py-1 hover:bg-white/5"
       >
-        –1 día
+        {t("previousDay")}
       </button>
       <button
         onClick={() => shift(+1)}
         className="mr-2 rounded border border-white/15 px-2 py-1 hover:bg-white/5"
       >
-        +1 día
+        {t("nextDay")}
       </button>
       <button
         onClick={() => shift(-5)}
@@ -50,7 +52,7 @@ export default function TimeDebugBar({ initial }: { initial: string }) {
         onClick={() => setCookie(null)}
         className="rounded border border-white/15 px-2 py-1 hover:bg-white/5"
       >
-        Reset
+        {t("reset")}
       </button>
     </div>
   );

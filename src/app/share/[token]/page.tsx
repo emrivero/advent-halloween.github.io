@@ -1,6 +1,7 @@
 import Calendar from "@/app/plan/[id]/ui-calendar";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getEffectiveToday } from "@/lib/time";
+import { getI18n } from "@/i18n/server";
 
 type Row = {
   id: string;
@@ -15,6 +16,7 @@ export default async function SharePage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  const { t } = await getI18n();
   const supabase = await createSupabaseServerClient();
   const { data: share } = await supabase
     .from("share_links")
@@ -38,10 +40,10 @@ export default async function SharePage({
     return (
       <div className="mx-auto max-w-3xl px-4 md:px-6 lg:px-8 py-10">
         <h1 className="text-2xl font-semibold text-halloweenAccent">
-          Enlace no válido o caducado
+          {t("invalidLink")}
         </h1>
         <p className="text-white/70 mt-1">
-          Pide a quien te lo envió que genere uno nuevo.
+          {t("invalidLinkHelp")}
         </p>
       </div>
     );
@@ -75,14 +77,13 @@ export default async function SharePage({
       <header className="flex items-center justify-center gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-semibold text-halloweenAccent">
-            Plan compartido
+            {t("sharedPlan")}
           </h1>
           <p className="text-white/70 text-sm">
-            {start} → {end} · {rows.length} días
+            {start} → {end} · {t("days", { count: rows.length })}
           </p>
           <p className="text-white/50 text-xs mt-1">
-            Vista pública de solo lectura · los pósters futuros permanecen
-            ocultos 🎃
+            {t("readOnly")}
           </p>
         </div>
       </header>

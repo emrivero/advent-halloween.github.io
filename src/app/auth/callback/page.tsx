@@ -2,9 +2,11 @@
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useI18n } from "@/i18n/provider";
 
 export default function AuthCallbackPage() {
   const [supabase] = useState(createSupabaseBrowserClient);
+  const { t } = useI18n();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,8 +33,8 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="mx-auto max-w-md py-10">
-      <h1 className="text-2xl font-semibold">Accediendo…</h1>
-      <p className="text-white/70">Estamos validando tu sesión.</p>
+      <h1 className="text-2xl font-semibold">{t("signingIn")}</h1>
+      <p className="text-white/70">{t("validatingSession")}</p>
     </div>
   );
 }

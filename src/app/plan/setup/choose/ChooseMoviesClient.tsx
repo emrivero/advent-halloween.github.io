@@ -4,6 +4,7 @@ import MovieSearch from "@/components/MoviesSearch";
 import { Movie, useMovieData } from "@/hooks/useMovieData";
 import { useMemo, useState } from "react";
 import { createPlanFromSelectionAction } from "./actions";
+import { useI18n } from "@/i18n/provider";
 
 type PickMovie = Movie & {
   isSaga?: boolean;
@@ -18,6 +19,7 @@ export default function ChooseMoviesClient({
   name: string;
   days: string[];
 }) {
+  const { t } = useI18n();
   const target = days.length;
   const [selected, setSelected] = useState<PickMovie[]>([]);
   const [tab, setTab] = useState<
@@ -161,9 +163,7 @@ export default function ChooseMoviesClient({
   // Abre modal en vez de crear directamente
   const requestCreate = () => {
     if (selected.length !== target) {
-      alert(
-        `Debes elegir exactamente ${target} películas (te faltan ${remaining}).`
-      );
+      alert(t("mustChooseMovies", { total: target, remaining }));
       return;
     }
     setConfirmOpen(true);
@@ -185,25 +185,29 @@ export default function ChooseMoviesClient({
   return (
     <div className="py-6">
       <h1 className="text-2xl font-semibold text-halloweenAccent">
-        Elige {target} película{target === 1 ? "" : "s"}
+        {t("chooseMovies", { count: target })}
       </h1>
       <p className="text-white/70">
-        Puedes mezclar categorías o añadir películas personalizadas.
+        {t("mixMovies")}
       </p>
 
       {/* Tabs */}
       <div className="mt-4 inline-flex rounded-md border border-white/15 p-1">
-        {(["Spooky", "Sobrenatural", "Slasher", "Buscar"] as const).map((t) => (
+        {(["Spooky", "Sobrenatural", "Slasher", "Buscar"] as const).map((tabName) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabName}
+            onClick={() => setTab(tabName)}
             className={[
               "px-3 py-1.5 text-sm rounded-md",
-              tab === t ? "bg-white text-gray-900" : "hover:bg-white/5",
-              t === "Buscar" && "border border-[#f0a500]",
+              tab === tabName ? "bg-white text-gray-900" : "hover:bg-white/5",
+              tabName === "Buscar" && "border border-[#f0a500]",
             ].join(" ")}
           >
-            {t}
+            {tabName === "Sobrenatural"
+              ? t("supernatural")
+              : tabName === "Buscar"
+                ? t("search")
+                : tabName}
           </button>
         ))}
       </div>
@@ -212,11 +216,8 @@ export default function ChooseMoviesClient({
       <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-3">
         <div className="mb-2 flex items-center justify-between">
           <div className="text-sm text-white/80">
-            Seleccionadas:{" "}
-            <strong>
-              {selected.length}/{target}
-            </strong>{" "}
-            · <span className="text-white/60">Faltan {remaining}</span>
+            {t("selectedCount", { selected: selected.length, total: target })}{" "}
+            · <span className="text-white/60">{t("remaining", { count: remaining })}</span>
           </div>
         </div>
 
@@ -283,7 +284,7 @@ export default function ChooseMoviesClient({
                           }}
                           className="rounded border-white/15 bg-black/30"
                         />
-                        <span className="text-white/80">¿Es saga?</span>
+                        <span className="text-white/80">{t("isSaga")}</span>
                       </label>
                     </div>
 
@@ -292,7 +293,7 @@ export default function ChooseMoviesClient({
                       <div className="mt-2 grid grid-cols-6 gap-2 text-xs">
                         <label className="col-span-4 text-left">
                           <span className="block text-white/70 mb-1">
-                            Saga (clave)
+                            {t("sagaKey")}
                           </span>
                           <div className="flex items-center gap-2">
                             <input
@@ -311,7 +312,7 @@ export default function ChooseMoviesClient({
 
                         <label className="col-span-2 text-left">
                           <span className="block text-white/70 mb-1">
-                            Orden
+                            {t("order")}
                           </span>
                           <input
                             type="number"
@@ -337,7 +338,7 @@ export default function ChooseMoviesClient({
                     onClick={() => removeAt(i)}
                     className="rounded-md border border-white/15 px-2 py-1 text-xs hover:bg-white/5"
                   >
-                    Quitar
+                    {t("remove")}
                   </button>
                 </li>
               ))}
@@ -346,21 +347,20 @@ export default function ChooseMoviesClient({
             <div className="text-sm text-white/80 mt-4">
               <span className="text-white/60">
                 <p className="bold">
-                  · Usa la funcionalidad de saga para mantener el orden en las
-                  películas de una misma serie ·
+                  · {t("sagaHelp")} ·
                 </p>
               </span>
             </div>
           </>
         ) : (
-          <p className="text-sm text-white/60">Aún no has añadido películas.</p>
+          <p className="text-sm text-white/60">{t("noMoviesAdded")}</p>
         )}
       </div>
 
       {/* CTA final */}
       <div className="mt-4 flex items-center justify-end gap-3">
         <div className="text-sm text-white/70">
-          Restantes: <strong>{remaining}</strong>
+          {t("remainingLabel", { count: remaining })}
         </div>
         <button
           onClick={requestCreate} // 👈 abre modal
@@ -371,7 +371,7 @@ export default function ChooseMoviesClient({
               : "rounded-full px-4 py-2 text-sm border border-white/15 text-white/60 cursor-not-allowed"
           }
         >
-          Crear plan
+          {t("createPlan")}
         </button>
       </div>
 
@@ -415,7 +415,7 @@ export default function ChooseMoviesClient({
                 <div className="text-xs text-white/60">{(m as any).year}</div>
                 {picked && (
                   <span className="absolute right-2 top-2 rounded-full bg-[#22c55e] px-2 py-0.5 text-xs">
-                    Añadida
+                    {t("added")}
                   </span>
                 )}
               </button>
@@ -454,12 +454,12 @@ export default function ChooseMoviesClient({
             {/* Header (fijo) */}
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-xl font-semibold text-halloweenAccent">
-                Confirma tu calendario sorpresa
+                {t("confirmCalendar")}
               </h2>
               <button
                 onClick={() => setConfirmOpen(false)}
                 className="text-[#f0a500] text-2xl leading-none"
-                aria-label="Cerrar"
+                aria-label={t("close")}
               >
                 &times;
               </button>
@@ -467,7 +467,7 @@ export default function ChooseMoviesClient({
 
             {/* Subtítulo (fijo) */}
             <p className="mt-1 text-sm text-white/70">
-              Revisa los datos de cada película antes de crear el plan.
+              {t("reviewMovies")}
             </p>
 
             {/* Body (SCROLL) */}
@@ -497,14 +497,14 @@ export default function ChooseMoviesClient({
                         </span>
                       </div>
                       <div className="text-white/70">
-                        <span className="opacity-70">Saga:</span>{" "}
+                        <span className="opacity-70">{t("saga")}:</span>{" "}
                         {m.isSaga && m.sagaKey ? (
                           m.sagaKey
                         ) : (
                           <em className="text-white/50">—</em>
                         )}
                         {" · "}
-                        <span className="opacity-70">Orden:</span>{" "}
+                        <span className="opacity-70">{t("order")}:</span>{" "}
                         {m.isSaga && m.sagaOrder ? (
                           m.sagaOrder
                         ) : (
@@ -524,14 +524,14 @@ export default function ChooseMoviesClient({
                 onClick={() => setConfirmOpen(false)}
                 className="rounded-md border border-white/15 px-4 py-2 hover:bg-white/5"
               >
-                Seguir editando
+                {t("keepEditing")}
               </button>
               <button
                 onClick={confirmCreate}
                 disabled={creating}
                 className="disabled:opacity-60 rounded-full px-4 py-2 font-werebeast text-sm bg-halloweenAccent text-black hover:scale-105 transition-transform shadow-lg"
               >
-                {creating ? "Creando..." : "Confirmar y crear plan"}
+                {creating ? t("creating") : t("createConfirm")}
               </button>
             </div>
           </div>

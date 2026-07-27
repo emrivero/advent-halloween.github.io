@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useI18n } from "@/i18n/provider";
 
 type Movie = { title: string; img: string };
 type MoviesFile = { date: string; movies: Movie[] };
@@ -28,6 +29,7 @@ function isUnlocked(day: number, monthIndex: number, now: Date) {
 }
 
 export default function HalloweenCalendarPage() {
+  const { t } = useI18n();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [dataDate, setDataDate] = useState<string | null>(null);
   const [modal, setModal] = useState<{
@@ -100,11 +102,11 @@ export default function HalloweenCalendarPage() {
     <div className="min-h-screen font-werebeast">
       <header className="py-6">
         <h1 className="relative mx-auto inline-block text-4xl md:text-5xl font-bold text-halloweenAccent">
-          Calendario de Halloween
+          {t("halloweenCalendar")}
         </h1>
         {dataDate && (
           <p className="mt-2 text-white/70 text-sm">
-            Catálogo versión: {dataDate}
+            {t("catalogVersion", { version: dataDate })}
           </p>
         )}
       </header>
@@ -143,7 +145,7 @@ export default function HalloweenCalendarPage() {
                 absolute -bottom-14 flex h-[45px] w-[45px] items-center justify-center rounded-full border-2 border-halloweenAccent bg-black/70 text-white text-sm md:h-[50px] md:w-[50px] md:text-base lg:h-[54px] lg:w-[54px]
               "
               >
-                Día {day}
+                {t("day", { day })}
               </div>
             </button>
           );
@@ -159,13 +161,12 @@ export default function HalloweenCalendarPage() {
           <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
               <h2 className="text-xl font-semibold">
-                Película recomendada para el día {modal.day}:{" "}
-                {modal.movie.title}
+                {t("recommendation", { day: modal.day ?? "", title: modal.movie.title })}
               </h2>
               <button
                 onClick={() => setModal({ open: false })}
                 className="text-halloweenAccent text-2xl leading-none"
-                aria-label="Cerrar"
+                aria-label={t("close")}
               >
                 &times;
               </button>

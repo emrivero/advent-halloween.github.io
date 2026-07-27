@@ -1,8 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import CatalogClient from "./CatalogClient";
+import { getI18n } from "@/i18n/server";
 
 export default async function CatalogPage() {
+  const { t } = await getI18n();
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -37,9 +39,9 @@ export default async function CatalogPage() {
 
   return (
     <div className="py-8">
-      <h1 className="text-3xl font-bold text-[#f0a500]">Catálogo</h1>
+      <h1 className="text-3xl font-bold text-[#f0a500]">{t("catalog")}</h1>
       <p className="text-white/70 mt-1">
-        Marca qué pelis quieres incluir en tus planes.
+        {t("catalogIntro")}
       </p>
       <CatalogClient initialMovies={initial} />
     </div>

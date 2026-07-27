@@ -106,7 +106,9 @@ describe("GET /api/search", () => {
     );
 
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: "TMDB_API_KEY missing" });
+    expect(await response.json()).toEqual({
+      error: "Falta configurar TMDB_API_KEY",
+    });
   });
 
   it("rechaza búsquedas excesivamente largas antes de consultar Supabase", async () => {

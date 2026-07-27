@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/i18n/provider";
 
 export type SearchItem = {
   tmdb_id: number | null;
@@ -25,6 +26,7 @@ export type MovieDetail = {
 };
 
 export function useMovieSearch(debounceMs = 300) {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [items, setItems] = useState<SearchItem[]>([]);
   const [open, setOpen] = useState(false);
@@ -50,7 +52,7 @@ export function useMovieSearch(debounceMs = 300) {
     }
     setLoading(true);
     setErr(null);
-    const t = setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       try {
         const r = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`, {
           signal: controller.signal,
@@ -60,22 +62,22 @@ export function useMovieSearch(debounceMs = 300) {
           setItems(j.results ?? []);
           setOpen(true);
         } else {
-          setErr(j?.error ?? "Error al buscar");
+          setErr(j?.error ?? t("searchError"));
           setItems([]);
           setOpen(false);
         }
       } catch (e: any) {
         if (e?.name === "AbortError") return;
-        setErr(e?.message ?? "Error al buscar");
+        setErr(e?.message ?? t("searchError"));
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
     }, debounceMs);
     return () => {
-      clearTimeout(t);
+      clearTimeout(timeout);
       controller.abort();
     };
-  }, [q, debounceMs]);
+  }, [q, debounceMs, t]);
 
   // Close on outside click
   useEffect(() => {
@@ -101,16 +103,16 @@ export function useMovieSearch(debounceMs = 300) {
         signal: controller.signal,
       });
       const j = await r.json();
-      if (!r.ok) throw new Error(j?.error ?? "Error cargando detalle");
+      if (!r.ok) throw new Error(j?.error ?? t("detailError"));
       setDetail(j as MovieDetail);
     } catch (e: any) {
       if (e?.name === "AbortError") return;
-      setDetailErr(e?.message ?? "Error cargando detalle");
+      setDetailErr(e?.message ?? t("detailError"));
       setDetail(null);
     } finally {
       if (!controller.signal.aborted) setDetailLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const closeDetail = useCallback(() => {
     detailAbortRef.current?.abort();

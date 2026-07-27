@@ -2,9 +2,11 @@
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { useI18n } from "@/i18n/provider";
 
 export default function AuthForm() {
   const [supabase] = useState(createSupabaseBrowserClient);
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function AuthForm() {
   return (
     <div className="mx-auto max-w-md py-10">
       <h1 className="mb-4 text-4xl font-semibold text-halloweenAccent">
-        Acceso
+        {t("access")}
       </h1>
 
       {!sent ? (
@@ -48,8 +50,8 @@ export default function AuthForm() {
             onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
             className="rounded-md border border-white/10 bg-gray-900 p-2 disabled:opacity-50"
-            placeholder="tucorreo@ejemplo.com"
-            aria-label="Correo electrónico"
+            placeholder={t("emailPlaceholder")}
+            aria-label={t("email")}
           />
 
           <button
@@ -79,10 +81,10 @@ export default function AuthForm() {
                     d="M4 12a8 8 0 0116 0h-4a4 4 0 10-8 0H4z"
                   />
                 </svg>
-                Enviando…
+                {t("sending")}
               </>
             ) : (
-              "Enviar magic link"
+              t("sendMagicLink")
             )}
           </button>
 
@@ -98,7 +100,7 @@ export default function AuthForm() {
         </form>
       ) : (
         <p className="text-green-400" role="status" aria-live="polite">
-          Te enviamos un enlace de acceso. Revisa tu correo.
+          {t("linkSent")}
         </p>
       )}
     </div>

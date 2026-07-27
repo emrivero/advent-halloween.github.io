@@ -2,13 +2,15 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { buildPosterUrl, MOVIE_TTL_MS } from "@/lib/tmdb";
 import { NextResponse } from "next/server";
 import { allowRequest } from "@/lib/rate-limit";
+import { localeFromRequest, translate } from "@/i18n/config";
 
 const TMDB_URL = "https://api.themoviedb.org/3";
 
 export async function GET(req: Request) {
   try {
+    const locale = localeFromRequest(req);
     if (!allowRequest(req, "movie"))
-      return NextResponse.json({ error: "Demasiadas solicitudes" }, { status: 429 });
+      return NextResponse.json({ error: translate(locale, "tooManyRequests") }, { status: 429 });
     const { searchParams } = new URL(req.url);
     const tmdbRaw = searchParams.get("tmdb");
     const imdbRaw = searchParams.get("imdb");
@@ -19,12 +21,12 @@ export async function GET(req: Request) {
       (titleRaw && (titleRaw.trim().length === 0 || titleRaw.length > 300)) ||
       (yearRaw && !/^\d{4}$/.test(yearRaw))
     )
-      return NextResponse.json({ error: "Parámetros no válidos" }, { status: 400 });
+      return NextResponse.json({ error: translate(locale, "invalidParameters") }, { status: 400 });
 
     const key = process.env.TMDB_API_KEY;
     if (!key) {
       return NextResponse.json(
-        { error: "TMDB_API_KEY missing" },
+        { error: translate(locale, "tmdbMissing") },
         { status: 500 }
       );
     }
@@ -35,7 +37,7 @@ export async function GET(req: Request) {
       tmdbRaw &&
       (!Number.isSafeInteger(tmdb_id) || (tmdb_id as number) <= 0)
     )
-      return NextResponse.json({ error: "tmdb_id no válido" }, { status: 400 });
+      return NextResponse.json({ error: translate(locale, "invalidTmdbId") }, { status: 400 });
 
     if (!tmdb_id && imdbRaw) {
       // /find/{imdb_id}?external_source=imdb_id
@@ -71,7 +73,7 @@ export async function GET(req: Request) {
 
     if (!tmdb_id) {
       return NextResponse.json(
-        { error: "No se pudo resolver tmdb_id" },
+        { error: translate(locale, "unresolvedTmdb") },
         { status: 400 }
       );
     }

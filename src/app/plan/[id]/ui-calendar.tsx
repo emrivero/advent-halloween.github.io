@@ -5,6 +5,8 @@ import { Check, Lock, Unlock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setDayStatusAction } from "./actions";
+import { useI18n } from "@/i18n/provider";
+import type { MessageKey } from "@/i18n/config";
 
 function isUnlocked(dayDate: string, status: Day["status"], today: string) {
   if (status !== "locked") return true;
@@ -33,7 +35,7 @@ type Props = {
   readOnly?: boolean; // 👈 nuevo
 };
 
-function statusStyles(status: Day["status"]) {
+function statusStyles(status: Day["status"], t: (key: MessageKey) => string) {
   // ring + badge color por estado
   switch (status) {
     case "watched":
@@ -41,21 +43,21 @@ function statusStyles(status: Day["status"]) {
         ring: "ring-2 ring-[#22c55e]",
         badgeBg: "bg-[#22c55e]",
         Icon: Check,
-        label: "Visto",
+        label: t("watched"),
       };
     case "skipped":
       return {
         ring: "ring-2 ring-[#ef4444]",
         badgeBg: "bg-[#ef4444]",
         Icon: X,
-        label: "Saltado",
+        label: t("skipped"),
       };
     case "unlocked":
       return {
         ring: "ring-2 ring-[#10b981]/70",
         badgeBg: "bg-[#10b981]",
         Icon: Unlock,
-        label: "Desbloqueado",
+        label: t("unlocked"),
       };
     case "locked":
     default:
@@ -63,12 +65,13 @@ function statusStyles(status: Day["status"]) {
         ring: "ring-1 ring-[#835c08]/60",
         badgeBg: "bg-[#835c08]",
         Icon: Lock,
-        label: "Bloqueado",
+        label: t("locked"),
       };
   }
 }
 
 export default function Calendar({ days, planId, today, readOnly }: Props) {
+  const { t } = useI18n();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -101,7 +104,7 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
       >
         {list.map((d) => {
           const unlockedNow = isUnlocked(d.day_date, d.status, today);
-          const { ring, badgeBg, Icon, label } = statusStyles(d.status);
+          const { ring, badgeBg, Icon, label } = statusStyles(d.status, t);
           const clickable = unlockedNow && !!d.movie;
 
           return (
@@ -145,7 +148,7 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
                   lg:h-[54px] lg:w-[54px] halloween-text
                 "
               >
-                Día {parseInt(d.day_date.slice(8, 10), 10)}
+                {t("day", { day: parseInt(d.day_date.slice(8, 10), 10) })}
               </div>
             </button>
           );
@@ -157,22 +160,22 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
         <LegendDot
           color="#835c08"
           icon={<Lock className="h-3.5 w-3.5" />}
-          label="Bloqueado"
+          label={t("locked")}
         />
         <LegendDot
           color="#10b981"
           icon={<Unlock className="h-3.5 w-3.5" />}
-          label="Desbloqueado"
+          label={t("unlocked")}
         />
         <LegendDot
           color="#22c55e"
           icon={<Check className="h-3.5 w-3.5" />}
-          label="Visto"
+          label={t("watched")}
         />
         <LegendDot
           color="#ef4444"
           icon={<X className="h-3.5 w-3.5" />}
-          label="Saltado"
+          label={t("skipped")}
         />
       </div>
 
@@ -190,7 +193,7 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
               <button
                 onClick={() => setModal({ open: false })}
                 className="text-[#f0a500] text-2xl leading-none"
-                aria-label="Cerrar"
+                aria-label={t("close")}
               >
                 &times;
               </button>
@@ -219,14 +222,14 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
                           router.refresh();
                         } catch {
                           setStatusLocal(id, modal.day!.status);
-                          alert("No se pudo actualizar el día.");
+                          alert(t("updateDayError"));
                         }
                       });
                     }}
                     disabled={isPending}
                     className="rounded-md bg-white px-4 py-2 text-gray-900 disabled:opacity-60"
                   >
-                    {isPending ? "Marcando…" : "Marcar visto ✓"}
+                    {isPending ? t("marking") : t("markWatched")}
                   </button>
 
                   {/* SALTAR (optimistic) */}
@@ -241,14 +244,14 @@ export default function Calendar({ days, planId, today, readOnly }: Props) {
                           router.refresh();
                         } catch {
                           setStatusLocal(id, modal.day!.status);
-                          alert("No se pudo actualizar el día.");
+                          alert(t("updateDayError"));
                         }
                       });
                     }}
                     disabled={isPending}
                     className="rounded-md border border-white/15 px-4 py-2 hover:bg-white/5 disabled:opacity-60"
                   >
-                    {isPending ? "Saltando…" : "Saltar"}
+                    {isPending ? t("skipping") : t("skip")}
                   </button>
                 </>
               )}

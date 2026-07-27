@@ -1,21 +1,29 @@
 // src/app/layout.tsx
 import DecorativeBG from "@/components/DecorativeBG";
 import type { Metadata, Viewport } from "next";
+import { getI18n, getLocale } from "@/i18n/server";
+import { I18nProvider } from "@/i18n/provider";
 import "./globals.css";
 // (Opcional) un botón de auth en el header
 import AuthButtonClient from "@/components/AuthButtonClient";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale } = await getI18n();
+  const description =
+    locale === "es"
+      ? "Tu maratón de Halloween a tu ritmo"
+      : "Your Halloween marathon at your pace";
+  return {
   metadataBase: new URL("https://advent-halloween.vercel.app"),
   title: "Advent Films Halloween",
-  description: "Tu maratón de Halloween a tu ritmo",
+  description,
   openGraph: {
     type: "website",
     url: "/",
     title: "Advent Films Halloween 🎃",
     siteName: "Advent Films Halloween",
-    description: "Tu maratón de Halloween a tu ritmo",
+    description,
     images: [
       {
         url: "/og-halloween.png", // ruta pública
@@ -24,30 +32,33 @@ export const metadata: Metadata = {
         alt: "Advent Films Halloween - calendario de pelis",
       },
     ],
-    locale: "es_ES",
+    locale: locale === "es" ? "es_ES" : "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "Advent Films Halloween 🎃",
-    description: "Tu maratón de Halloween a tu ritmo",
+    description,
     images: ["/og-halloween.png"],
   },
   icons: {
     icon: "/favicon.ico",
   },
-};
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1d1d1d",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const { t } = await getI18n();
   return (
-    <html lang="es">
+    <html lang={locale}>
       <head>
         <link
           href="https://fonts.cdnfonts.com/css/happy-halloween"
@@ -55,6 +66,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-dvh bg-[#1d1d1d] text-white">
+        <I18nProvider locale={locale}>
         {/* Fondo y decoraciones */}
         <DecorativeBG />
         {/* Header sencillo */}
@@ -79,12 +91,13 @@ export default function RootLayout({
         <footer className="relative z-0 mt-16 border-t border-white/10 max-h[100px] px-4">
           {/* Nota legal / footer mini */}
           <p className="mt-3 text-center text-sm text-white/50">
-            Hecho con Next.js + Supabase · No compartimos datos con terceros
+            {t("footer")}
           </p>
           <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-white/60">
             © {new Date().getFullYear()} — Happy Haunting! 👻
           </div>
         </footer>
+        </I18nProvider>
       </body>
     </html>
   );
