@@ -6,6 +6,7 @@ import { I18nProvider } from "@/i18n/provider";
 import "./globals.css";
 // (Opcional) un botón de auth en el header
 import AuthButtonClient from "@/components/AuthButtonClient";
+import LanguageSelector from "@/components/LanguageSelector";
 import Link from "next/link";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -80,7 +81,10 @@ export default async function RootLayout({
             <Link href="/" className="text-2xl font-semibold">
               🎃 Advent Films Halloween
             </Link>
-            <AuthButtonClient />
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <LanguageSelector />
+              <AuthButtonClient />
+            </div>
           </nav>
         </header>
         {/* Contenido principal */}

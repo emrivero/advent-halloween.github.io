@@ -1,6 +1,5 @@
 import PlanButtonClient from "@/components/PlanButtonClient";
 import Link from "next/link";
-import LanguageSelector from "@/components/LanguageSelector";
 import { getI18n } from "@/i18n/server";
 
 export default async function HomePage() {
@@ -9,7 +8,6 @@ export default async function HomePage() {
     <div className="mx-auto max-w-6xl py-10">
       {/* Hero */}
       <section className="grid gap-6 text-center">
-        <div className="flex justify-end"><LanguageSelector /></div>
         <h1 className="text-4xl md:text-5xl font-bold text-halloweenAccent font-werebeast">
           {t("homeTitle")}
         </h1>
